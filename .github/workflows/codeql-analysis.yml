@@ -1,0 +1,60 @@
+name: CodeQL Analysis
+
+on:
+  push:
+    branches-ignore:
+      - 'dependabot/**'
+  pull_request:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.303
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.0.2
+
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v1
+        with:
+          queries: security-and-quality
+          languages: csharp
+
+      - name: Build solution
+        shell: pwsh
+        run: |
+          $pathToSolution = "GVFS.sln"
+          $buildConfiguration = "Release"
+          $useSharedCompilation = "false"
+          $testProjects = "GVFS\GVFS.Tests\GVFS.Tests.csproj", "GVFS\GVFS.UnitTests\GVFS.UnitTests.csproj", "GVFS.FunctionalTests.LockHolder", "GVFS\GVFS.FunctionalTests.LockHolder\GVFS.FunctionalTests.LockHolder.csproj", "GVFS\GVFS.FunctionalTests\GVFS.FunctionalTests.csproj"
+
+          dotnet nuget locals all --clear
+
+          dotnet sln $pathToSolution remove $testProjects
+
+          dotnet clean $pathToSolution `
+          --configuration $buildConfiguration
+
+          dotnet restore $pathToSolution
+
+          dotnet build $pathToSolution `
+          -property:UseSharedCompilation=$useSharedCompilation `
+          --configuration $buildConfiguration `
+          --no-incremental `
+          --no-restore
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v1
+
+# Built with ❤ by [Pipeline Foundation](https://pipeline.foundation)
