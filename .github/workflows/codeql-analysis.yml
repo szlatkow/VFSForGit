@@ -14,16 +14,18 @@ jobs:
     name: Analyze
     runs-on: windows-2019
     steps:
-      - name: Setup .NET SDK
+      - name: Checkout source
+        uses: actions/checkout@v2
+        with:
+          path: src
+
+      - name: Install .NET SDK
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.303
+          dotnet-version: 5.0.201
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.0.2
-
-      - name: Checkout repository
-        uses: actions/checkout@v2
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v1
@@ -31,25 +33,9 @@ jobs:
           queries: security-and-quality
           languages: csharp
 
-      - name: Build solution
-        shell: pwsh
-        run: |
-          $pathToSolution = "GVFS.sln"
-          $buildConfiguration = "Release"
-          $useSharedCompilation = "false"
-
-          dotnet nuget locals all --clear
-
-          dotnet clean $pathToSolution `
-          --configuration $buildConfiguration
-
-          dotnet restore $pathToSolution
-
-          dotnet build $pathToSolution `
-          -property:UseSharedCompilation=$useSharedCompilation `
-          --configuration $buildConfiguration `
-          --no-incremental `
-          --no-restore
+      - name: Build VFS for Git
+        shell: cmd
+        run: src\scripts\Build.bat
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v1
