@@ -37,11 +37,8 @@ jobs:
           $pathToSolution = "GVFS.sln"
           $buildConfiguration = "Release"
           $useSharedCompilation = "false"
-          $testProjects = "GVFS\GVFS.Tests\GVFS.Tests.csproj", "GVFS\GVFS.UnitTests\GVFS.UnitTests.csproj", "GVFS.FunctionalTests.LockHolder", "GVFS\GVFS.FunctionalTests.LockHolder\GVFS.FunctionalTests.LockHolder.csproj", "GVFS\GVFS.FunctionalTests\GVFS.FunctionalTests.csproj"
 
           dotnet nuget locals all --clear
-
-          dotnet sln $pathToSolution remove $testProjects
 
           dotnet clean $pathToSolution `
           --configuration $buildConfiguration
