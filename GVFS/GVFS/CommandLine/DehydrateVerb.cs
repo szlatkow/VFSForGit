@@ -234,8 +234,6 @@ from a parent of the folders list.
         {
             if (!this.TryBackupNonSrcFiles(tracer, enlistment, backupRoot))
             {
-                this.Output.WriteLine();
-                this.WriteMessage(tracer, "ERROR: Backup failed. ");
                 return;
             }
 
@@ -589,6 +587,7 @@ from a parent of the folders list.
                     // ... backup all .git\*.lock files
                     if (!this.TryCopyFilesInFolder(tracer, enlistment.DotGitRoot, backupGit, searchPattern: "*.lock"))
                     {
+                        errorMessage = "Failed to backup .git lock files.";
                         return false;
                     }
 
