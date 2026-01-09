@@ -275,16 +275,7 @@ from a parent of the folders list.
                                 else
                                 {
                                     string fullPath = Path.Combine(enlistment.WorkingDirectoryBackingRoot, folder);
-                                    if (!this.fileSystem.DirectoryExists(fullPath))
-                                    {
-                                        this.WriteMessage(tracer, $"Cannot {this.ActionName} folder '{folder}': '{folder}' does not exist.");
-                                        foldersToDehydrate.Add(folder);
-                                    }
-                                    else
-                                    {
-                                        // Still add to foldersToDehydrate so that any placeholders or modified paths get cleaned up
-                                        foldersToDehydrate.Add(folder);
-                                    }
+                                    foldersToDehydrate.Add(folder);
                                 }
                             }
                         }
@@ -440,7 +431,7 @@ from a parent of the folders list.
 
         private bool CheckGitStatus(ITracer tracer, GVFSEnlistment enlistment, bool fullDehydrate)
         {
-            if (NoStatus)
+            if (this.NoStatus)
             {
                 return true;
             }
