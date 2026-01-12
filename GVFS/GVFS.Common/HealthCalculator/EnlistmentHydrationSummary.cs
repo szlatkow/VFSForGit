@@ -12,6 +12,8 @@ namespace GVFS.Common
         public int TotalFileCount { get; private set; }
         public int HydratedFolderCount { get; private set; }
         public int TotalFolderCount { get; private set; }
+        public Exception Error { get; private set; } = null;
+
 
         public bool IsValid
         {
@@ -67,7 +69,7 @@ namespace GVFS.Common
                     TotalFolderCount = totalFolderCount,
                 };
             }
-            catch
+            catch (Exception e)
             {
                 return new EnlistmentHydrationSummary()
                 {
@@ -75,6 +77,7 @@ namespace GVFS.Common
                     HydratedFolderCount = -1,
                     TotalFileCount = -1,
                     TotalFolderCount = -1,
+                    Error = e,
                 };
             }
         }
