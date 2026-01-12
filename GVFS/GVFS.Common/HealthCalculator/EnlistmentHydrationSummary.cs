@@ -28,12 +28,12 @@ namespace GVFS.Common
         {
             if (!IsValid)
             {
-                return "Error calculating hydration. Run 'gvfs health' for details.";
+                return "Error calculating hydration summary. Run 'gvfs health' at the repository root for hydration status details.";
             }
 
             int fileHydrationPercent = TotalFileCount == 0 ? 0 : (100 * HydratedFileCount) / TotalFileCount;
             int folderHydrationPercent = TotalFolderCount == 0 ? 0 : ((100 * HydratedFolderCount) / TotalFolderCount);
-            return $"{fileHydrationPercent}% of files and {folderHydrationPercent}% of folders hydrated. Run 'gvfs health' for details.";
+            return $"{fileHydrationPercent}% of files and {folderHydrationPercent}% of folders hydrated. Run 'gvfs health' at the repository root for details.";
         }
 
         public static EnlistmentHydrationSummary CreateSummary(
