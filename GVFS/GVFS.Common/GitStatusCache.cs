@@ -341,7 +341,8 @@ namespace GVFS.Common
 
         private void UpdateHydrationSummary()
         {
-            bool enabled = TEST_EnableHydrationSummaryOverride ?? this.context.Enlistment.GetStatusHydrationConfig();
+            bool enabled = TEST_EnableHydrationSummaryOverride
+                ?? this.context.Repository.LibGit2RepoInvoker.GetConfigBoolWithFallback(GVFSConstants.GitConfig.ShowHydrationStatus, GVFSConstants.GitConfig.ShowHydrationStatusDefault);
             if (!enabled)
             {
                 return;

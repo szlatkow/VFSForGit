@@ -1,5 +1,7 @@
 ﻿using GVFS.Common;
+using GVFS.Common.Git;
 using GVFS.Common.NamedPipes;
+using GVFS.Common.Tracing;
 using GVFS.Hooks.HooksPlatform;
 using System;
 using System.Collections.Generic;
@@ -19,6 +21,7 @@ namespace GVFS.Hooks
 
         private static string enlistmentRoot;
         private static string enlistmentPipename;
+        private static string normalizedCurrentDirectory;
         private static Random random = new Random();
 
         private delegate void LockRequestDelegate(bool unattended, string[] args, int pid, NamedPipeClient pipeClient);
@@ -35,7 +38,6 @@ namespace GVFS.Hooks
                 bool unattended = GVFSEnlistment.IsUnattended(tracer: null);
 
                 string errorMessage;
-                string normalizedCurrentDirectory;
                 if (!GVFSHooksPlatform.TryGetNormalizedPath(Environment.CurrentDirectory, out normalizedCurrentDirectory, out errorMessage))
                 {
                     ExitWithError($"Failed to determine final path for current directory {Environment.CurrentDirectory}. Error: {errorMessage}");
@@ -108,19 +110,10 @@ namespace GVFS.Hooks
 
         private static bool ConfigurationAllowsHydrationStatus()
         {
-            try
+            using (LibGit2RepoInvoker repo = new LibGit2RepoInvoker(NullTracer.Instance, normalizedCurrentDirectory))
             {
-                ProcessResult result = ProcessHelper.Run("git", $"config --get {GVFSConstants.GitConfig.ShowHydrationStatus}");
-                bool hydrationStatusEnabled;
-                if (bool.TryParse(result.Output.Trim(), out hydrationStatusEnabled))
-                {
-                    return hydrationStatusEnabled;
-                }
+                return repo.GetConfigBoolWithFallback(GVFSConstants.GitConfig.ShowHydrationStatus, GVFSConstants.GitConfig.ShowHydrationStatusDefault);
             }
-            catch (Exception)
-            {
-            }
-            return GVFSConstants.GitConfig.ShowHydrationStatusDefault;
         }
 
         private static void ExitWithError(params string[] messages)

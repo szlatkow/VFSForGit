@@ -222,7 +222,12 @@ namespace GVFS.CommandLine
                 {
                     if (!this.NoPrefetch)
                     {
-                        bool trustPackIndexes = enlistment.GetTrustPackIndexesConfig();
+                        bool trustPackIndexes;
+                        using (var repo = new LibGit2RepoInvoker(NullTracer.Instance, enlistment.WorkingDirectoryBackingRoot))
+                        {
+                            trustPackIndexes = repo.GetConfigBoolWithFallback(GVFSConstants.GitConfig.TrustPackIndexes, GVFSConstants.GitConfig.TrustPackIndexesDefault);
+                        }
+                        
                         /* If pack indexes are not trusted, the prefetch can take a long time.
                          * We will run the prefetch command in the background.
                          */
