@@ -112,7 +112,7 @@ namespace GVFS.Hooks
         {
             using (LibGit2RepoInvoker repo = new LibGit2RepoInvoker(NullTracer.Instance, normalizedCurrentDirectory))
             {
-                return repo.GetConfigBoolWithFallback(GVFSConstants.GitConfig.ShowHydrationStatus, GVFSConstants.GitConfig.ShowHydrationStatusDefault);
+                return repo.GetConfigBoolOrDefault(GVFSConstants.GitConfig.ShowHydrationStatus, GVFSConstants.GitConfig.ShowHydrationStatusDefault);
             }
         }
 

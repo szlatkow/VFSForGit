@@ -56,7 +56,7 @@ namespace GVFS.Common.Maintenance
                     return false;
                 }
 
-                var trustPackIndexes = this.Context.Repository.LibGit2RepoInvoker.GetConfigBoolWithFallback(GVFSConstants.GitConfig.TrustPackIndexes, GVFSConstants.GitConfig.TrustPackIndexesDefault);
+                var trustPackIndexes = this.Context.Repository.LibGit2RepoInvoker.GetConfigBoolOrDefault(GVFSConstants.GitConfig.TrustPackIndexes, GVFSConstants.GitConfig.TrustPackIndexesDefault);
 
                 if (!this.GitObjects.TryDownloadPrefetchPacks(gitProcess, maxGoodTimeStamp, trustPackIndexes, out packIndexes))
                 {

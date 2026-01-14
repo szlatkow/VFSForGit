@@ -121,6 +121,7 @@ namespace GVFS.CommandLine
 
                 CacheServerInfo cacheServer = null;
                 ServerGVFSConfig serverGVFSConfig = null;
+                bool trustPackIndexes;
 
                 using (JsonTracer tracer = new JsonTracer(GVFSConstants.GVFSEtwProviderName, "GVFSClone"))
                 {
@@ -216,18 +217,17 @@ namespace GVFS.CommandLine
                     {
                         tracer.RelatedError(cloneResult.ErrorMessage);
                     }
+
+                    using (var repo = new LibGit2RepoInvoker(tracer, enlistment.WorkingDirectoryBackingRoot))
+                    {
+                        trustPackIndexes = repo.GetConfigBoolOrDefault(GVFSConstants.GitConfig.TrustPackIndexes, GVFSConstants.GitConfig.TrustPackIndexesDefault);
+                    }
                 }
 
                 if (cloneResult.Success)
                 {
                     if (!this.NoPrefetch)
                     {
-                        bool trustPackIndexes;
-                        using (var repo = new LibGit2RepoInvoker(NullTracer.Instance, enlistment.WorkingDirectoryBackingRoot))
-                        {
-                            trustPackIndexes = repo.GetConfigBoolWithFallback(GVFSConstants.GitConfig.TrustPackIndexes, GVFSConstants.GitConfig.TrustPackIndexesDefault);
-                        }
-                        
                         /* If pack indexes are not trusted, the prefetch can take a long time.
                          * We will run the prefetch command in the background.
                          */

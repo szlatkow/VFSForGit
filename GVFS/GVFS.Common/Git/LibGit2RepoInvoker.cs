@@ -87,7 +87,7 @@ namespace GVFS.Common.Git
             this.GetSharedRepo()?.ObjectExists("30380be3963a75e4a34e10726795d644659e1129");
         }
 
-        public bool GetConfigBoolWithFallback(string key, bool defaultValue)
+        public bool GetConfigBoolOrDefault(string key, bool defaultValue)
         {
             bool? value = defaultValue;
             if (this.TryInvoke(repo => repo.GetConfigBool(key), out value))
