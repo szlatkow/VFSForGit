@@ -373,9 +373,10 @@ namespace GVFS.Common
                 }
                 else
                 {
+                    metadata["Exception"] = hydrationSummary.Error?.ToString();
                     this.context.Tracer.RelatedWarning(
                         metadata,
-                        $"{nameof(GitStatusCache)}{nameof(RebuildStatusCacheIfNeeded)}: hydration summary could not be calculdated.",
+                        $"{nameof(GitStatusCache)}{nameof(RebuildStatusCacheIfNeeded)}: hydration summary could not be calculated.",
                         Keywords.Telemetry);
                 }
             }
