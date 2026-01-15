@@ -109,31 +109,5 @@ namespace GVFS.Common
         {
             return new GitProcess(this);
         }
-
-        public bool GetTrustPackIndexesConfig()
-        {
-            var gitProcess = this.CreateGitProcess();
-            bool trustPackIndexes = true;
-            if (gitProcess.TryGetFromConfig(GVFSConstants.GitConfig.TrustPackIndexes, forceOutsideEnlistment: false, out var valueString)
-                && bool.TryParse(valueString, out var trustPackIndexesConfig))
-            {
-                trustPackIndexes = trustPackIndexesConfig;
-            }
-
-            return trustPackIndexes;
-        }
-
-        public bool GetStatusHydrationConfig()
-        {
-            var gitProcess = this.CreateGitProcess();
-
-            if (gitProcess.TryGetFromConfig(GVFSConstants.GitConfig.ShowHydrationStatus, forceOutsideEnlistment: false, out var valueString)
-                && bool.TryParse(valueString, out var statusHydrationConfig))
-            {
-                return statusHydrationConfig;
-            }
-
-            return GVFSConstants.GitConfig.ShowHydrationStatusDefault;
-        }
     }
 }
