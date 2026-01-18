@@ -17,7 +17,7 @@ namespace GVFS.Common.Git
             Native.Init();
 
             IntPtr repoHandle;
-            if (Native.Repo.Open(out repoHandle, repoPath) != Native.SuccessCode)
+            if (Native.Repo.Open(out repoHandle, repoPath) != Native.ResultCode.Success)
             {
                 string reason = Native.GetLastError();
                 string message = "Couldn't open repo at " + repoPath + ": " + reason;
@@ -45,7 +45,7 @@ namespace GVFS.Common.Git
         public Native.ObjectTypes? GetObjectType(string sha)
         {
             IntPtr objHandle;
-            if (Native.RevParseSingle(out objHandle, this.RepoHandle, sha) != Native.SuccessCode)
+            if (Native.RevParseSingle(out objHandle, this.RepoHandle, sha) != Native.ResultCode.Success)
             {
                 return null;
             }
@@ -63,7 +63,7 @@ namespace GVFS.Common.Git
         public virtual string GetTreeSha(string commitish)
         {
             IntPtr objHandle;
-            if (Native.RevParseSingle(out objHandle, this.RepoHandle, commitish) != Native.SuccessCode)
+            if (Native.RevParseSingle(out objHandle, this.RepoHandle, commitish) != Native.ResultCode.Success)
             {
                 return null;
             }
@@ -99,7 +99,7 @@ namespace GVFS.Common.Git
         public virtual bool ObjectExists(string sha)
         {
             IntPtr objHandle;
-            if (Native.RevParseSingle(out objHandle, this.RepoHandle, sha) != Native.SuccessCode)
+            if (Native.RevParseSingle(out objHandle, this.RepoHandle, sha) != Native.ResultCode.Success)
             {
                 return false;
             }
@@ -111,7 +111,7 @@ namespace GVFS.Common.Git
         public virtual bool TryCopyBlob(string sha, Action<Stream, long> writeAction)
         {
             IntPtr objHandle;
-            if (Native.RevParseSingle(out objHandle, this.RepoHandle, sha) != Native.SuccessCode)
+            if (Native.RevParseSingle(out objHandle, this.RepoHandle, sha) != Native.ResultCode.Success)
             {
                 return false;
             }
@@ -157,7 +157,7 @@ namespace GVFS.Common.Git
         {
             List<string> missingSubtreesList = new List<string>();
             IntPtr treeHandle;
-            if (Native.RevParseSingle(out treeHandle, this.RepoHandle, treeSha) != Native.SuccessCode
+            if (Native.RevParseSingle(out treeHandle, this.RepoHandle, treeSha) != Native.ResultCode.Success
                 || treeHandle == IntPtr.Zero)
             {
                 return Array.Empty<string>();
@@ -185,6 +185,68 @@ namespace GVFS.Common.Git
             }
 
             return missingSubtreesList.ToArray();
+        }
+
+        /// <summary>
+        /// Get a config value from the repo's git config.
+        /// </summary>
+        /// <param name="name">Name of the config entry</param>
+        /// <returns>The config value, or null if not found.</returns>
+        public virtual string GetConfigString(string name)
+        {
+            IntPtr configHandle;
+            if (Native.Config.GetConfig(out configHandle, this.RepoHandle) != Native.ResultCode.Success)
+            {
+                throw new LibGit2Exception($"Failed to get config handle: {Native.GetLastError()}");
+            }
+            try
+            {
+                string value;
+                Native.ResultCode resultCode = Native.Config.GetString(out value, configHandle, name);
+                if (resultCode == Native.ResultCode.NotFound)
+                {
+                    return null;
+                }
+                else if (resultCode != Native.ResultCode.Success)
+                {
+                    throw new LibGit2Exception($"Failed to get config value for '{name}': {Native.GetLastError()}");
+                }
+
+                return value;
+            }
+            finally
+            {
+                Native.Config.Free(configHandle);
+            }
+        }
+
+        public virtual bool? GetConfigBool(string name)
+        {
+            IntPtr configHandle;
+            if (Native.Config.GetConfig(out configHandle, this.RepoHandle) != Native.ResultCode.Success)
+            {
+                throw new LibGit2Exception($"Failed to get config handle: {Native.GetLastError()}");
+            }
+            try
+            {
+                bool value;
+                Native.ResultCode resultCode = Native.Config.GetBool(out value, configHandle, name);
+                if (resultCode == Native.ResultCode.NotFound)
+                {
+                    return null;
+                }
+                else if (resultCode != Native.ResultCode.Success)
+                {
+                    throw new LibGit2Exception($"Failed to get config value for '{name}': {Native.GetLastError()}");
+                }
+
+                return value;
+            }
+            finally
+            {
+                Native.Config.Free(configHandle);
+            }
+
         }
 
         /// <summary>
@@ -242,7 +304,11 @@ namespace GVFS.Common.Git
 
         public static class Native
         {
-            public const uint SuccessCode = 0;
+            public enum ResultCode : int
+            {
+                Success = 0,
+                NotFound = -3,
+            }
 
             public const string Git2NativeLibName = GVFSConstants.LibGit2LibraryName;
 
@@ -265,7 +331,7 @@ namespace GVFS.Common.Git
             public static extern int Shutdown();
 
             [DllImport(Git2NativeLibName, EntryPoint = "git_revparse_single")]
-            public static extern uint RevParseSingle(out IntPtr objectHandle, IntPtr repoHandle, string oid);
+            public static extern ResultCode RevParseSingle(out IntPtr objectHandle, IntPtr repoHandle, string oid);
 
             public static string GetLastError()
             {
@@ -293,10 +359,25 @@ namespace GVFS.Common.Git
             public static class Repo
             {
                 [DllImport(Git2NativeLibName, EntryPoint = "git_repository_open")]
-                public static extern uint Open(out IntPtr repoHandle, string path);
+                public static extern ResultCode Open(out IntPtr repoHandle, string path);
 
                 [DllImport(Git2NativeLibName, EntryPoint = "git_repository_free")]
                 public static extern void Free(IntPtr repoHandle);
+            }
+
+            public static class Config
+            {
+                [DllImport(Git2NativeLibName, EntryPoint = "git_repository_config")]
+                public static extern ResultCode GetConfig(out IntPtr configHandle, IntPtr repoHandle);
+
+                [DllImport(Git2NativeLibName, EntryPoint = "git_config_get_string")]
+                public static extern ResultCode GetString(out string value, IntPtr configHandle, string name);
+
+                [DllImport(Git2NativeLibName, EntryPoint = "git_config_get_bool")]
+                public static extern ResultCode GetBool(out bool value, IntPtr configHandle, string name);
+
+                [DllImport(Git2NativeLibName, EntryPoint = "git_config_free")]
+                public static extern void Free(IntPtr configHandle);
             }
 
             public static class Object

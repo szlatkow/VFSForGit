@@ -42,6 +42,7 @@ namespace GVFS.Common
             /* Intended to be a temporary config to allow testing of distrusting pack indexes from cache server
              * before it is enabled by default. */
             public const string TrustPackIndexes = GVFSPrefix + "trust-pack-indexes";
+            public const bool TrustPackIndexesDefault = true;
 
             public const string ShowHydrationStatus = GVFSPrefix + "show-hydration-status";
             public const bool ShowHydrationStatusDefault = false;
